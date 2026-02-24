@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
+// app/os_js.go
+
 package app
 
 import (
@@ -71,10 +73,21 @@ type window struct {
 func newWindow(win *callbacks, options []Option) {
 	doc := js.Global().Get("document")
 	cont := getContainer(doc)
-	cnv := createCanvas(doc)
-	cont.Call("appendChild", cnv)
+
+	cnv, fromDOM := getOrCreateCanvas(doc)
+	if !fromDOM {
+		cont.Call("appendChild", cnv)
+	}
 	tarea := createTextArea(doc)
 	cont.Call("appendChild", tarea)
+
+	// doc := js.Global().Get("document")
+	// cont := getContainer(doc)
+	// cnv := createCanvas(doc)
+	// cont.Call("appendChild", cnv)
+	// tarea := createTextArea(doc)
+	// cont.Call("appendChild", tarea)
+
 	w := &window{
 		cnv:       cnv,
 		document:  doc,
@@ -120,13 +133,25 @@ func newWindow(win *callbacks, options []Option) {
 }
 
 func getContainer(doc js.Value) js.Value {
-	cont := doc.Call("getElementById", "giowindow")
+	id := "giowindow"
+	if v := js.Global().Get("__gio_container_id"); v.Type() == js.TypeString && v.String() != "" {
+		id = v.String()
+	}
+	cont := doc.Call("getElementById", id)
 	if !cont.IsNull() {
 		return cont
 	}
 	cont = doc.Call("createElement", "DIV")
 	doc.Get("body").Call("appendChild", cont)
 	return cont
+
+	// cont := doc.Call("getElementById", "giowindow")
+	// if !cont.IsNull() {
+	// 	return cont
+	// }
+	// cont = doc.Call("createElement", "DIV")
+	// doc.Get("body").Call("appendChild", cont)
+	// return cont
 }
 
 func createTextArea(doc js.Value) js.Value {
@@ -142,6 +167,17 @@ func createTextArea(doc js.Value) js.Value {
 	tarea.Set("autocapitalize", "off")
 	tarea.Set("spellcheck", false)
 	return tarea
+}
+
+// returns (canvas, foundExistingInDOM)
+func getOrCreateCanvas(doc js.Value) (js.Value, bool) {
+	if v := js.Global().Get("__gio_canvas_id"); v.Type() == js.TypeString && v.String() != "" {
+		cnv := doc.Call("getElementById", v.String())
+		if !cnv.IsNull() {
+			return cnv, true
+		}
+	}
+	return createCanvas(doc), false
 }
 
 func createCanvas(doc js.Value) js.Value {
