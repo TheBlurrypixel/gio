@@ -70,6 +70,7 @@ type window struct {
 	contextStatus contextStatus
 }
 
+// Modified to retrieve a canvas by ID or create new
 func newWindow(win *callbacks, options []Option) {
 	doc := js.Global().Get("document")
 	cont := getContainer(doc)
@@ -132,6 +133,8 @@ func newWindow(win *callbacks, options []Option) {
 	w.draw(true)
 }
 
+// Modified to retrieve a canvas by custom ID saved in window.__gio_container_id
+// or use "giowindow" as ID
 func getContainer(doc js.Value) js.Value {
 	id := "giowindow"
 	if v := js.Global().Get("__gio_container_id"); v.Type() == js.TypeString && v.String() != "" {
@@ -169,6 +172,7 @@ func createTextArea(doc js.Value) js.Value {
 	return tarea
 }
 
+// New func to retrieve a canvas by ID or create new
 // returns (canvas, foundExistingInDOM)
 func getOrCreateCanvas(doc js.Value) (js.Value, bool) {
 	if v := js.Global().Get("__gio_canvas_id"); v.Type() == js.TypeString && v.String() != "" {
