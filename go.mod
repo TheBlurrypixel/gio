@@ -1,4 +1,4 @@
-module gioui.org
+module github.com/TheBlurrypixel/gio
 
 go 1.24.0
 
